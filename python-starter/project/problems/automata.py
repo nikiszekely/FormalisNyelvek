@@ -55,7 +55,7 @@ class AutomataProblem(Problem):
 
         for word in words:
             current_state = initial_state
-
+ 
             for symbol in word:
                 if (current_state, symbol) in transitions:
                     current_state = transitions[(current_state, symbol)]

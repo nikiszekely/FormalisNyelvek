@@ -1,8 +1,8 @@
-IGEN
-IGEN
-NEM
-NEM
-IGEN
-IGEN
-NEM
-NEM
+s0 s1 s2
+a b
+s0
+s1 s2
+s0 a s1
+s1 a s1
+s1 b s2
+s2 b s2
