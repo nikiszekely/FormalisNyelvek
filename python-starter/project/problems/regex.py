@@ -24,7 +24,6 @@ class RegexProblem(Problem):
                 "Az --input és --output megadása kötelező."
             )
 
-        # Logfájl beolvasása
         with open(
             args.input,
             "r",
@@ -33,7 +32,6 @@ class RegexProblem(Problem):
         ) as f:
             lines = f.readlines()
 
-        # Logbejegyzések feldolgozása regex segítségével
         log_regex = re.compile(
             r"^(?P<date>\d{2}-\d{2})\s+"
             r"(?P<time>\d{2}:\d{2}:\d{2}\.\d+)\s+"
@@ -47,7 +45,6 @@ class RegexProblem(Problem):
 
         for line in lines:
             match = log_regex.match(line)
-
             if match:
                 logs.append(match)
 
@@ -58,19 +55,13 @@ class RegexProblem(Problem):
             # 1. Október 15-i bejegyzések
             result.append(sum(
                 1 for m in logs
-                if re.fullmatch(
-                    r"10-15",
-                    m.group("date")
-                )
+                if m.group("date") == "10-15"
             ))
 
             # 2. Október 15., 10:18:51
             result.append(sum(
                 1 for m in logs
-                if re.fullmatch(
-                    r"10-15",
-                    m.group("date")
-                )
+                if m.group("date") == "10-15"
                 and re.match(
                     r"10:18:51\.",
                     m.group("time")
@@ -86,12 +77,12 @@ class RegexProblem(Problem):
                 )
             ))
 
-            # 4. lowmemorykiller tag
+            # 4. lowmemorykiller a tagben
             result.append(sum(
                 1 for m in logs
-                if re.fullmatch(
+                if re.search(
                     r"lowmemorykiller",
-                    m.group("tag")
+                    m.group("tag").strip()
                 )
             ))
 
@@ -102,49 +93,39 @@ class RegexProblem(Problem):
                     r"10:18:51\.",
                     m.group("time")
                 )
-                and re.fullmatch(
-                    r"221",
-                    m.group("pid")
-                )
+                and m.group("pid") == "221"
             ))
 
             # 6. E szintű bejegyzések
             result.append(sum(
                 1 for m in logs
-                if re.fullmatch(
-                    r"E",
-                    m.group("level")
-                )
+                if m.group("level") == "E"
             ))
 
-            # 7. PackageManager tag és W szint
+            # 7. PackageManager a tagben, W szint
             result.append(sum(
                 1 for m in logs
-                if re.fullmatch(
-                    r"W",
-                    m.group("level")
-                )
-                and re.fullmatch(
+                if m.group("level") == "W"
+                and re.search(
                     r"PackageManager",
-                    m.group("tag")
+                    m.group("tag").strip()
                 )
             ))
 
-            # 8. ExoPlayer tag és D szint
-            # 8. ExoPlayer debug (D)
+            # 8. ExoPlayer a tagben, D szint
             result.append(sum(
                 1 for m in logs
                 if m.group("level") == "D"
-                and re.search(r"ExoPlayer", m.group("tag"))
+                and re.search(
+                    r"ExoPlayer",
+                    m.group("tag").strip()
+                )
             ))
 
             # 9. E vagy W szint és Java fájlpozíció
             result.append(sum(
                 1 for m in logs
-                if re.fullmatch(
-                    r"[EW]",
-                    m.group("level")
-                )
+                if m.group("level") in ("E", "W")
                 and re.search(
                     r"\.java:\d+",
                     m.group("message")
@@ -163,10 +144,8 @@ class RegexProblem(Problem):
         elif args.rgx == 2:
 
             # Java fájlnevek E szintű bejegyzésekből
-            # Az ismétlődő fájlnevek is megmaradnak
             for m in logs:
-                if re.fullmatch(r"E", m.group("level")):
-
+                if m.group("level") == "E":
                     message = m.group("message")
 
                     matches = re.finditer(
@@ -195,16 +174,11 @@ class RegexProblem(Problem):
             errors = Counter()
 
             for m in logs:
-                if re.fullmatch(
-                    r"E",
-                    m.group("level")
-                ):
-                    pid = m.group("pid")
-                    errors[pid] += 1
+                if m.group("level") == "E":
+                    errors[m.group("pid")] += 1
 
             if errors:
                 pid, count = errors.most_common(1)[0]
-
                 result.append(
                     f"PID={pid} ({count} errors)"
                 )
@@ -214,16 +188,12 @@ class RegexProblem(Problem):
             # E szintű bejegyzések, ahol PID = TID
             count = sum(
                 1 for m in logs
-                if re.fullmatch(
-                    r"E",
-                    m.group("level")
-                )
+                if m.group("level") == "E"
                 and m.group("pid") == m.group("tid")
             )
 
             result.append(count)
 
-        # Eredmények kiírása
         with open(
             args.output,
             "w",
