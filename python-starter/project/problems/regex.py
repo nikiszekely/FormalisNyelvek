@@ -131,16 +131,11 @@ class RegexProblem(Problem):
             ))
 
             # 8. ExoPlayer tag és D szint
+            # 8. ExoPlayer debug (D)
             result.append(sum(
                 1 for m in logs
-                if re.fullmatch(
-                    r"D",
-                    m.group("level")
-                )
-                and re.fullmatch(
-                    r"ExoPlayer",
-                    m.group("tag")
-                )
+                if m.group("level") == "D"
+                and re.search(r"ExoPlayer", m.group("tag"))
             ))
 
             # 9. E vagy W szint és Java fájlpozíció
@@ -211,7 +206,7 @@ class RegexProblem(Problem):
                 pid, count = errors.most_common(1)[0]
 
                 result.append(
-                    f"PID={pid} ({count} errors)."
+                    f"PID={pid} ({count} errors)"
                 )
 
         elif args.rgx == 5:
