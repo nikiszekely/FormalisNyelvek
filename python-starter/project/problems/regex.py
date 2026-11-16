@@ -33,12 +33,15 @@ class RegexProblem(Problem):
             lines = f.readlines()
 
         log_regex = re.compile(
-            r"^(?P<date>\d{2}-\d{2})\s+"
-            r"(?P<time>\d{2}:\d{2}:\d{2}\.\d+)\s+"
-            r"(?P<pid>\d+)\s+"
-            r"(?P<tid>\d+)\s+"
-            r"(?P<level>[IDVEFAW])\s+"
-            r"(?P<tag>.*?):[ \t]*(?P<message>.*)$"
+             r'^10-15\s',
+                r'^10-15 10:18:51\.',
+                r'^[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:51\.',
+                r'^[0-9]{2}-[0-9]{2} .*?\s+lowmemorykiller:',
+                r'^10-15 10:18:51\.\d+\s+221\s+\d+\s+',
+                r'^[0-9]{2}-[0-9]{2} .*?\s+E\s+[^:]+:',
+                r'^[0-9]{2}-[0-9]{2} .*?\s+W\s+PackageManager:',
+                r'^[0-9]{2}-[0-9]{2} .*?\s+D\s+[^:]+:.*ExoPlayer|^[0-9]{2}-[0-9]{2} .*?\s+D\s+[^:]*ExoPlayer[^:]*:',                r'^[0-9]{2}-[0-9]{2} .*?\s+[EW]\s+[^:]+:.*\.java:',
+                r'^[0-9]{2}-[0-9]{2} .*?\s+[IDVEFAW]\s+[^:]+:.*Thread'
         )
 
         logs = []
