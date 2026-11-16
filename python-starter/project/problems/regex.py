@@ -24,6 +24,7 @@ class RegexProblem(Problem):
                 "Az --input és --output megadása kötelező."
             )
 
+        # Logfájl beolvasása
         with open(
             args.input,
             "r",
@@ -32,26 +33,29 @@ class RegexProblem(Problem):
         ) as f:
             lines = f.readlines()
 
+        # Logbejegyzések feldolgozása
         log_regex = re.compile(
-             r'^10-15\s',
-                r'^10-15 10:18:51\.',
-                r'^[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:51\.',
-                r'^[0-9]{2}-[0-9]{2} .*?\s+lowmemorykiller:',
-                r'^10-15 10:18:51\.\d+\s+221\s+\d+\s+',
-                r'^[0-9]{2}-[0-9]{2} .*?\s+E\s+[^:]+:',
-                r'^[0-9]{2}-[0-9]{2} .*?\s+W\s+PackageManager:',
-                r'^[0-9]{2}-[0-9]{2} .*?\s+D\s+[^:]+:.*ExoPlayer|^[0-9]{2}-[0-9]{2} .*?\s+D\s+[^:]*ExoPlayer[^:]*:',                r'^[0-9]{2}-[0-9]{2} .*?\s+[EW]\s+[^:]+:.*\.java:',
-                r'^[0-9]{2}-[0-9]{2} .*?\s+[IDVEFAW]\s+[^:]+:.*Thread'
+            r"^(?P<date>\d{2}-\d{2})\s+"
+            r"(?P<time>\d{2}:\d{2}:\d{2}\.\d+)\s+"
+            r"(?P<pid>\d+)\s+"
+            r"(?P<tid>\d+)\s+"
+            r"(?P<level>[IDVEFAW])\s+"
+            r"(?P<tag>.*?)[ \t]*:[ \t]*(?P<message>.*)$"
         )
 
         logs = []
 
         for line in lines:
             match = log_regex.match(line)
+
             if match:
                 logs.append(match)
 
         result = []
+
+        # ==================================
+        # CASE 1 - 10 REGEX FELADAT
+        # ==================================
 
         if args.rgx == 1:
 
@@ -80,13 +84,10 @@ class RegexProblem(Problem):
                 )
             ))
 
-            # 4. lowmemorykiller a tagben
+            # 4. lowmemorykiller tag
             result.append(sum(
                 1 for m in logs
-                if re.search(
-                    r"lowmemorykiller",
-                    m.group("tag").strip()
-                )
+                if m.group("tag").strip() == "lowmemorykiller"
             ))
 
             # 5. 10:18:51 időpont és PID = 221
@@ -105,23 +106,21 @@ class RegexProblem(Problem):
                 if m.group("level") == "E"
             ))
 
-            # 7. PackageManager a tagben, W szint
+            # 7. PackageManager tag és W szint
             result.append(sum(
                 1 for m in logs
                 if m.group("level") == "W"
-                and re.search(
-                    r"PackageManager",
-                    m.group("tag").strip()
-                )
+                and m.group("tag").strip() == "PackageManager"
             ))
 
-            # 8. ExoPlayer a tagben, D szint
+            # 8. D szintű ExoPlayer bejegyzések
+            # ExoPlayer lehet a tagben vagy az üzenetben
             result.append(sum(
                 1 for m in logs
                 if m.group("level") == "D"
-                and re.search(
-                    r"ExoPlayer",
-                    m.group("tag").strip()
+                and (
+                    "ExoPlayer" in m.group("tag")
+                    or "ExoPlayer" in m.group("message")
                 )
             ))
 
@@ -144,11 +143,15 @@ class RegexProblem(Problem):
                 )
             ))
 
+        # ==================================
+        # CASE 2 - JAVA FÁJLNEVEK
+        # ==================================
+
         elif args.rgx == 2:
 
-            # Java fájlnevek E szintű bejegyzésekből
             for m in logs:
                 if m.group("level") == "E":
+
                     message = m.group("message")
 
                     matches = re.finditer(
@@ -159,9 +162,12 @@ class RegexProblem(Problem):
                     for found in matches:
                         result.append(found.group(1))
 
+        # ==================================
+        # CASE 3 - EGYEDI PID-EK
+        # ==================================
+
         elif args.rgx == 3:
 
-            # Egyedi PID-ek előfordulási sorrendben
             seen = set()
 
             for m in logs:
@@ -171,24 +177,32 @@ class RegexProblem(Problem):
                     seen.add(pid)
                     result.append(pid)
 
+        # ==================================
+        # CASE 4 - LEGTÖBB HIBÁT ADÓ PID
+        # ==================================
+
         elif args.rgx == 4:
 
-            # Legtöbb E szintű hibával rendelkező PID
             errors = Counter()
 
             for m in logs:
                 if m.group("level") == "E":
-                    errors[m.group("pid")] += 1
+                    pid = m.group("pid")
+                    errors[pid] += 1
 
             if errors:
                 pid, count = errors.most_common(1)[0]
+
                 result.append(
                     f"PID={pid} ({count} errors)"
                 )
 
+        # ==================================
+        # CASE 5 - PID = TID
+        # ==================================
+
         elif args.rgx == 5:
 
-            # E szintű bejegyzések, ahol PID = TID
             count = sum(
                 1 for m in logs
                 if m.group("level") == "E"
@@ -196,6 +210,10 @@ class RegexProblem(Problem):
             )
 
             result.append(count)
+
+        # ==================================
+        # EREDMÉNYEK KIÍRÁSA
+        # ==================================
 
         with open(
             args.output,
