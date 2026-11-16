@@ -25,7 +25,7 @@ class Determinize(Problem):
         self.determinizalas(args.input, args.output)
 
     def determinizalas(self, input_fajl, output_fajl):
-        # Bemeneti fajl beolvasasa
+        # bemeneti fajl beolvasasa
         try:
             with open(input_fajl, "r", encoding="utf-8") as fajl:
                 sorok = fajl.read().splitlines()
@@ -35,6 +35,7 @@ class Determinize(Problem):
         if len(sorok) < 4:
             raise ValueError("A bemeneti fajl legalabb 4 sort tartalmazzon!")
 
+        # felbontas
         allapotok = sorok[0].split()
         abc = sorted(sorok[1].split())
         kezdo = sorok[2].strip()
@@ -59,7 +60,7 @@ class Determinize(Problem):
             if allapot not in allapot_halmaz:
                 raise ValueError(f"Ismeretlen vegallapot: {allapot}")
 
-        # Atmenetek beolvasasa
+        # atmenetek beolvasasa
         atmenetek = {}
 
         for sorszam, sor in enumerate(sorok[4:], start=5):
@@ -88,9 +89,10 @@ class Determinize(Problem):
                     f"Ismeretlen bemeneti jel a(z) {sorszam}. sorban: {jel}"
                 )
 
-            atmenetek.setdefault((forras, jel), set()).add(cel)
+            # eltarolja a helyes atmeneteket
+            atmenetek.setdefault((forras, jel), set()).add(cel) 
 
-        # Reszhalmaz-konstrukcio
+        # determinizalas
         kezdo_reszhalmaz = frozenset([kezdo])
         reszhalmazok = [kezdo_reszhalmaz]
         sorszamok = {kezdo_reszhalmaz: 0}
@@ -107,7 +109,7 @@ class Determinize(Problem):
                 for regi_allapot in aktualis:
                     celok.update(atmenetek.get((regi_allapot, jel), set()))
 
-                # Hianyzo atmenetet nem irunk ki
+                # hianyzo atmenetet nem irunk ki
                 if not celok:
                     continue
 
@@ -121,7 +123,7 @@ class Determinize(Problem):
                 cel_nev = f"s{sorszamok[cel_reszhalmaz]}"
                 uj_atmenetek.append((aktualis_nev, jel, cel_nev))
 
-        # Vegallapotok meghatarozasa
+        # vegallapotok meghatarozasa
         uj_allapotok = [f"s{i}" for i in range(len(reszhalmazok))]
         uj_vegallapotok = []
 
@@ -129,7 +131,7 @@ class Determinize(Problem):
             if reszhalmaz & vegallapotok:
                 uj_vegallapotok.append(f"s{i}")
 
-        # Atmenetek rendezese: forras, jel, cel
+        # atmenetek rendezese: forras, jel, cel
         uj_atmenetek.sort(
             key=lambda atmenet: (
                 int(atmenet[0][1:]),
